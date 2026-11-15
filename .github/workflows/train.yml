@@ -1,4 +1,4 @@
-name: Generate contribution train
+name: Generate contribution animations
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/train.yml
       - scripts/generate_train.py
+      - scripts/generate_robot.py
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
@@ -32,6 +33,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROFILE_OWNER: ${{ github.repository_owner }}
 
+      - name: Generate robot SVG
+        run: python scripts/generate_robot.py --username "$PROFILE_OWNER"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROFILE_OWNER: ${{ github.repository_owner }}
+
       - name: Publish SVGs to output branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +52,7 @@ jobs:
           git checkout -b output
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add contribution-train.svg
-          git commit -m "Update contribution train"
+          git add contribution-train.svg contribution-robot.svg
+          git commit -m "Update contribution animations"
           HEADER=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c "http.extraheader=AUTHORIZATION: basic $HEADER" push --force "$SERVER_URL/$REPOSITORY.git" HEAD:output
