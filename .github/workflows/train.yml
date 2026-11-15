@@ -1,96 +1,51 @@
 name: Generate contribution train
 
-
 on:
-
   push:
-
     branches: [main]
-
     paths:
-
       - .github/workflows/train.yml
-
       - scripts/generate_train.py
-
   schedule:
-
     - cron: "0 0 * * *"
-
   workflow_dispatch:
 
-
 permissions:
-
   contents: write
 
-
 concurrency:
-
   group: contribution-train
-
   cancel-in-progress: false
 
-
 jobs:
-
   generate:
-
     runs-on: ubuntu-latest
-
     timeout-minutes: 10
-
     steps:
-
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
-
         with:
-
           python-version: '3.12'
-
       - name: Generate train SVG
-
         run: python scripts/generate_train.py --username "$PROFILE_OWNER"
-
         env:
-
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
           PROFILE_OWNER: ${{ github.repository_owner }}
 
-
       - name: Publish SVGs to output branch
-
         env:
-
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
           REPOSITORY: ${{ github.repository }}
-
           SERVER_URL: ${{ github.server_url }}
-
         shell: bash
-
         run: |
-
           set -euo pipefail
-
           cd dist
-
           git init
-
           git checkout -b output
-
           git config user.name "github-actions[bot]"
-
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add contribution-train.svg
-
           git commit -m "Update contribution train"
-
           HEADER=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-
           git -c "http.extraheader=AUTHORIZATION: basic $HEADER" push --force "$SERVER_URL/$REPOSITORY.git" HEAD:output
